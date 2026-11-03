@@ -25,7 +25,7 @@
 
 Схема пристрою:
 
-![Circuit Schematic](image_95ef89.png)
+<img width="980" height="519" alt="PM_Circuit_Schematic" src="https://github.com/user-attachments/assets/e3c642cc-b62b-4703-b341-fb32e7b9f515" />
 
 ### Підключення пінів (Wemos D1 mini):
 * **I2C (LCD1602):** SCL $\rightarrow$ D1 (GPIO5), SDA $\rightarrow$ D2 (GPIO4)
