@@ -844,7 +844,7 @@ void drawMonitor() {
   } else if (lcdPage == 1) {
     // Сторінка 1 показує сесійні дані залежно від стану мережі
     if (!acStable) {
-      snprintf(buf, sizeof(buf), "Out:%4.0fWh Pk%4.0f", (float)Wh_out_outage, peakW_outage);
+      snprintf(buf, sizeof(buf), "Out%4.0fWh Pk%4.0f", (float)Wh_out_outage, peakW_outage);
     } else {
       snprintf(buf, sizeof(buf), "In:%4.0fWh AC ON", (float)Wh_in_acOn);
     }
