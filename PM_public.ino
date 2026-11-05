@@ -41,6 +41,10 @@ const uint32_t AC_NOTIFY_DELAY_MS = 1UL * 60UL * 1000UL;  // 1 хв (рекон�
 
 const float ETA_CHARGE = 0.83f;                           // ККД заряду (0.82..0.85)
 
+// Калібровка струму (множник). 
+// Якщо монітор завищує покази (показує 60Вт замість 55Вт), коефіцієнт буде меншим за 1 (55/60 = 0.916)
+float ICURR_K = 1.0f;
+
 // ========================= SYSTEM / BATTERY SPECS =========================
 // Загальний опір (проводів, клем, шунта, переходів) для компенсації просадки під навантаженням (в Омах)
 // Для 100А струму на 0.008 Ом падіння складе ~0.8В. Додаємо до виміряної напруги під розрядом.
@@ -125,8 +129,11 @@ bool inaRead(float& vBus, float& iA, float& pW, float& vSh_mV) {
 
   vBus = rawBus * 0.00125f * VBUS_K;  // V
   vSh_mV = rawSh * 0.0025f;           // mV
-  iA = rawCur * CURRENT_LSB;          // A signed
-  pW = rawP * (25.0f * CURRENT_LSB);
+
+  // ЗАСТОСОВУЄМО КАЛІБРУВАЛЬНИЙ КОЕФІЦІЄНТ ДО СТРУМУ:
+  iA = (rawCur * CURRENT_LSB) * ICURR_K;  // A signed (з урахуванням похибки)
+
+  pW = rawP * (25.0f * CURRENT_LSB) * ICURR_K; // Потужність теж множимо на цей же коефіцієнт
   if (iA < 0) pW = -pW;
 
   if (vBus < 0.0f || vBus > 40.0f) return false;
