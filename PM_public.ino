@@ -375,8 +375,12 @@ uint32_t emptySinceMs = 0;
 void socResyncAndEvents(float vClean, float iBat) {
   const float absI = fabs(iBat);
 
-  // REST resync (на основі чистої напруги спокою)
-  if (absI <= I_REST_A) {
+  // РЕСИНК дозволяємо ТІЛЬКИ в стані глибокого спокою (коли струм близький до нуля і немає заряду/розряду)
+  // Забороняємо ресинк під час заряду (iBat < -0.05) та під час активного розряду, 
+  // щоб скачки напруги від зарядки чи навантаження не ламали лічильник storedWh!
+  bool isCharging = (iBat < -0.05f);
+  
+  if (!isCharging && absI <= I_REST_A) {
     if (restSinceMs == 0) restSinceMs = millis();
     if (millis() - restSinceMs >= REST_TIME_MS) {
       int socV = calcSOC_byVoltage(vClean);
@@ -390,9 +394,8 @@ void socResyncAndEvents(float vClean, float iBat) {
     restSinceMs = 0;
   }
 
-  // FULL detect
-  bool charging = (iBat < -0.05f);
-  bool fullCond = charging && (vClean >= fullVoltageThreshold()) && (fabs(iBat) <= FULL_TAIL_A);
+  // FULL detect (залишається без змін: ловимо повний заряд чесно по досягненню порогової напруги і малому струму)
+  bool fullCond = isCharging && (vClean >= fullVoltageThreshold()) && (fabs(iBat) <= FULL_TAIL_A);
   if (fullCond) {
     if (fullSinceMs == 0) fullSinceMs = millis();
     if (millis() - fullSinceMs >= FULL_DETECT_MS) storedWh = capacityWh();
@@ -400,7 +403,7 @@ void socResyncAndEvents(float vClean, float iBat) {
     fullSinceMs = 0;
   }
 
-  // EMPTY detect (перевіряємо по чистій напрузі, щоб навантаження не скидало в 0)
+  // EMPTY detect
   bool discharging = (iBat > +0.2f);
   bool emptyCond = discharging && (vClean <= limits.criticalLow) && (absI >= MIN_LOAD_A_FOR_ALARM);
   if (emptyCond) {
